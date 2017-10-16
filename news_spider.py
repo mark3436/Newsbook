@@ -7,13 +7,11 @@ Created on Tue Sep 12 22:16:33 2017
 
 import scrapy
 from pymongo import MongoClient
-from scrapy.spider import BaseSpider
-from scrapy import Selector
 import re
 
 
-class QuotesSpider(scrapy.Spider):
-    name = "crawls_news"
+class KaosodSpider(scrapy.Spider):
+    name = "khaosod_news"
     #allowed_domains = ['https://www.khaosod.co.th']
     start_urls = ['https://www.khaosod.co.th/breaking-news', 'https://www.khaosod.co.th/special-stories', 'https://www.khaosod.co.th/hot-topics', 'https://www.khaosod.co.th/around-thailand', 'https://www.khaosod.co.th/around-the-world-news', 'https://www.khaosod.co.th/entertainment', 'https://www.khaosod.co.th/politics', 'https://www.khaosod.co.th/economics', 'https://www.khaosod.co.th/sports', 'https://www.khaosod.co.th/newspaper-column', 'https://www.khaosod.co.th/clips', 'https://www.khaosod.co.th/monitor-news', 'https://www.khaosod.co.th/lifestyle','https://www.khaosod.co.th/social-trend', 'https://www.khaosod.co.th/car-vehicle', 'https://www.khaosod.co.th/sci-tech', 'https://www.khaosod.co.th/amulets', 'https://www.khaosod.co.th/tv-guide']
     
@@ -35,11 +33,13 @@ class QuotesSpider(scrapy.Spider):
         token_topic = url.split('_')
         topic=token_topic[len(token_topic)-1]
         topic = re.findall('\d+', str(topic))
+        topic_name_token = url.split('/')
+        topic_name = topic_name_token[len(topic_name_token)-2]
         #print(topic)
         #print(url)
         client = MongoClient('localhost', 27017)
-        db = client.test
-        collections = db.news
+        db = client.newsbook
+        collections = db.khaosodnews
         title = response.xpath('//*[@id="post-' + str(topic[0]) +'"]/div[2]/div[1]/header/h1/text()').extract()
         time_zone = response.selector.xpath('//div[@class="td-module-meta-info"]//time')
         zone = response.selector.xpath('//div[@class="td-post-content"]//img')
@@ -58,7 +58,7 @@ class QuotesSpider(scrapy.Spider):
             print('there is')
         else:
             print('insert to database')
-            dic = {"reference_id" : str(topic[0]), "topic" : str(title[0]), "date" : time, "body" : paragraph, "image_url" : pictures}
+            dic = {"reference_id" : str(topic[0]), "topic_name" : topic_name, "topic" : str(title[0]), "date" : time, "body" : paragraph, "image_url" : pictures}
             collections.insert_one(dic)
         #print(len(paragraph))
         #print(pictures)
